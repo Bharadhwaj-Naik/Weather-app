@@ -137,6 +137,57 @@ h1 i{
     font-size:2.4rem;
 }
 
+.temp-area{
+    display:flex;
+    align-items:center;
+    gap:1rem;
+}
+
+#currentWeatherIcon{
+    font-size:4rem;
+    color:#ffd27d;
+}
+
+#currentTemp{
+    font-size:4rem;
+    font-weight:300;
+}
+
+.details{
+    display:flex;
+    gap:1.5rem;
+    margin-top:.8rem;
+    color:#d4e2ff;
+}
+
+.forecast-title{
+    font-size:1.3rem;
+    margin-bottom:1rem;
+}
+
+.forecast-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+    gap:1rem;
+}
+
+#errorBox{
+    margin-top:1rem;
+}
+
+@media(max-width:550px){
+
+    .dashboard{
+        padding:1.3rem;
+    }
+
+    .weather-now-card{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:1rem;
+    }
+
+}
 .search-section{
     display:flex;
     gap:.8rem;
@@ -228,56 +279,4 @@ button:hover{
 .city-name{
     font-size:2.2rem;
     font-weight:600;
-}
-
-.temp-area{
-    display:flex;
-    align-items:center;
-    gap:1rem;
-}
-
-#currentWeatherIcon{
-    font-size:4rem;
-    color:#ffd27d;
-}
-
-#currentTemp{
-    font-size:4rem;
-    font-weight:300;
-}
-
-.details{
-    display:flex;
-    gap:1.5rem;
-    margin-top:.8rem;
-    color:#d4e2ff;
-}
-
-.forecast-title{
-    font-size:1.3rem;
-    margin-bottom:1rem;
-}
-
-.forecast-grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
-    gap:1rem;
-}
-
-#errorBox{
-    margin-top:1rem;
-}
-
-@media(max-width:550px){
-
-    .dashboard{
-        padding:1.3rem;
-    }
-
-    .weather-now-card{
-        flex-direction:column;
-        align-items:flex-start;
-        gap:1rem;
-    }
-
 }
