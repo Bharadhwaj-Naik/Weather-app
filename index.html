@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkyView • Weather Dashboard</title>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<div class="dashboard">
+
+  <h1>
+    <i class="fas fa-cloud-sun-rain"></i>
+    SkyView
+  </h1>
+
+  <!-- Search -->
+
+  <div class="search-section">
+
+    <div class="search-box">
+
+      <i class="fas fa-search"></i>
+
+      <input
+      id="cityInput"
+      type="text"
+      placeholder="Enter city name...">
+
+    </div>
+
+    <button id="searchBtn">
+      <i class="fas fa-location-dot"></i>
+      Search
+    </button>
+
+  </div>
+
+  <!-- Search History -->
+
+  <div
+  class="history-panel"
+  id="historyPanel">
+
+    <div class="history-label">
+
+      <i class="fas fa-history"></i>
+
+      Recent
+
+    </div>
+
+    <div
+    id="historyTags"
+    class="history-tags">
+
+    </div>
+
+    <button
+    id="clearHistoryBtn">
+      Clear
+    </button>
+
+  </div>
+
+  <!-- Current Weather -->
+
+  <div id="currentWeatherContainer">
+
+    <div
+    id="currentCard"
+    class="weather-now-card">
+
+      <div class="city-main">
+
+        <div class="city-name">
+
+          <span id="cityDisplay"></span>
+
+          <span id="countryBadge"></span>
+
+        </div>
+
+        <div id="currentDate"></div>
+
+        <div class="details">
+
+          <span>
+
+            <i class="fas fa-droplet"></i>
+
+            <span id="humidity"></span>%
+
+          </span>
+
+          <span>
+
+            <i class="fas fa-wind"></i>
+
+            <span id="wind"></span>
+
+            m/s
+
+          </span>
+
+        </div>
+
+      </div>
+
+      <div class="temp-area">
+
+        <i
+        id="currentWeatherIcon"
+        class="fas fa-sun">
+
+        </i>
+
+        <div>
+
+          <span id="currentTemp"></span>°C
+
+        </div>
+
+      </div>
+
+      <div id="description"></div>
+
+    </div>
+
+  </div>
+
+  <!-- Forecast -->
+
+  <div class="forecast-title">
+
+    <i class="fas fa-calendar-alt"></i>
+
+    5-Day Forecast
+
+  </div>
+
+  <div
+  id="forecastGrid"
+  class="forecast-grid">
+
+  </div>
+
+  <div id="errorBox"></div>
+
+</div>
+
+<script>
+
+console.log("SkyView Started");
+
+</script>
+
+</body>
+</html>
