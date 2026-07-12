@@ -88,6 +88,189 @@
         });
       }
 
+
       
+      // ---------- Weather icon mapping (Font Awesome) ----------
+      function getWeatherIcon(iconCode, isLarge = false) {
+        const code = iconCode ? iconCode.substring(0, 2) : '01';
+        const iconMap = {
+          '01': 'fa-sun',            // clear sky
+          '02': 'fa-cloud-sun',      // few clouds
+          '03': 'fa-cloud',          // scattered clouds
+          '04': 'fa-cloud',          // broken clouds
+          '09': 'fa-cloud-showers-heavy', // shower rain
+          '10': 'fa-cloud-rain',     // rain
+          '11': 'fa-bolt',           // thunderstorm
+          '13': 'fa-snowflake',      // snow
+          '50': 'fa-smog'            // mist
+        };
+        return iconMap[code] || 'fa-cloud-sun';
+      }
+
+      function formatDate(timestamp, options = { weekday: 'short', month: 'short', day: 'numeric' }) {
+        return new Date(timestamp * 1000).toLocaleDateString('en-US', options);
+      }
+
+      function displayError(message) {
+        errorBox.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-circle"></i> ${message}</div>`;
+        // hide current card if error
+        currentCard.style.display = 'none';
+        forecastGrid.innerHTML = '';
+      }
+
+      function clearError() {
+        errorBox.innerHTML = '';
+      }
+
+      // ---------- Fetch current weather + 5-day forecast ----------
+      async function fetchWeatherByCity(city) {
+        if (!city || city.trim() === '') {
+          displayError('Please enter a city name.');
+          return;
+        }
+        clearError();
+        // Show minimal loading state
+        currentCard.style.display = 'none';
+        forecastGrid.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-pulse"></i> Loading forecast...</div>';
+
+        try {
+          // 1. Current weather
+          const currentResp = await fetch(`${BASE_URL}/weather?q=${encodeURIComponent(city)}&units=metric&appid=${API_KEY}`);
+          if (!currentResp.ok) {
+            const errData = await currentResp.json().catch(() => null);
+            throw new Error(errData?.message || `City not found (${currentResp.status})`);
+          }
+          const currentData = await currentResp.json();
+          
+          // 2. 5-day / 3-hour forecast (free API returns 5 days with 3h steps)
+          const forecastResp = await fetch(`${BASE_URL}/forecast?q=${encodeURIComponent(city)}&units=metric&appid=${API_KEY}`);
+          if (!forecastResp.ok) {
+            throw new Error('Unable to fetch forecast data.');
+          }
+          const forecastData = await forecastResp.json();
+
+          // Update UI with current weather
+          updateCurrentWeather(currentData);
+          // Update forecast (pick one representative per day)
+          updateForecast(forecastData);
+          
+          // Add to history
+          addCityToHistory(currentData.name);
+          // Optionally clear input
+          cityInput.value = '';
+        } catch (error) {
+          console.error(error);
+          displayError(error.message || 'Failed to get weather data.');
+          forecastGrid.innerHTML = '';
+        }
+      }
+
+      function updateCurrentWeather(data) {
+        if (!data || !data.main) return;
+        const city = data.name;
+        const country = data.sys?.country || '';
+        const temp = Math.round(data.main.temp);
+        const humidity = data.main.humidity;
+        const windSpeed = data.wind?.speed ?? 0;
+        const description = data.weather?.[0]?.description || '';
+        const iconCode = data.weather?.[0]?.icon || '01d';
+        const dt = data.dt;
+        
+        cityDisplay.textContent = city;
+        countryBadge.textContent = country ? `(${country})` : '';
+        currentDate.textContent = formatDate(dt, { weekday: 'long', month: 'short', day: 'numeric' });
+        humiditySpan.textContent = humidity;
+        windSpan.textContent = windSpeed;
+        currentTemp.textContent = temp;
+        descriptionSpan.textContent = description.charAt(0).toUpperCase() + description.slice(1);
+        
+        // Set large weather icon
+        const iconClass = getWeatherIcon(iconCode);
+        currentWeatherIcon.className = `weather-icon-lg fas ${iconClass}`;
+        
+        currentCard.style.display = 'flex';
+      }
+
+      function updateForecast(forecastData) {
+        forecastGrid.innerHTML = '';
+        if (!forecastData || !forecastData.list) {
+          forecastGrid.innerHTML = '<div style="color:#ccc;">No forecast available</div>';
+          return;
+        }
+
+        // Group forecast by date (YYYY-MM-DD) and pick one closest to midday (12:00)
+        const dailyMap = new Map();
+        
+        forecastData.list.forEach(item => {
+          const date = new Date(item.dt * 1000);
+          const dateKey = date.toISOString().split('T')[0]; // YYYY-MM-DD
+          const hour = date.getHours();
+          
+          if (!dailyMap.has(dateKey)) {
+            dailyMap.set(dateKey, item);
+          } else {
+            const existingItem = dailyMap.get(dateKey);
+            const existingHour = new Date(existingItem.dt * 1000).getHours();
+            // Prefer item closer to 12:00
+            if (Math.abs(hour - 12) < Math.abs(existingHour - 12)) {
+              dailyMap.set(dateKey, item);
+            }
+          }
+        });
+
+        // Convert to array and sort by date
+        const dailyEntries = Array.from(dailyMap.values()).sort((a, b) => a.dt - b.dt);
+        
+        // Take up to 5 days (including today if present, but we usually show next days)
+        const todayKey = new Date().toISOString().split('T')[0];
+        let forecastDays = dailyEntries.filter(entry => {
+          const entryDate = new Date(entry.dt * 1000).toISOString().split('T')[0];
+          return entryDate !== todayKey; // skip today to show future 5 days
+        }).slice(0, 5);
+
+        // If we don't have 5 future days, fill with remaining from today (edge case)
+        if (forecastDays.length < 5) {
+          const remaining = dailyEntries.filter(entry => {
+            const entryDate = new Date(entry.dt * 1000).toISOString().split('T')[0];
+            return entryDate === todayKey;
+          }).slice(0, 5 - forecastDays.length);
+          forecastDays = [...forecastDays, ...remaining];
+        }
+
+        if (forecastDays.length === 0) {
+          forecastGrid.innerHTML = '<div style="color:#ccc;">Not enough forecast data.</div>';
+          return;
+        }
+
+        forecastDays.forEach(day => {
+          const dt = day.dt;
+          const temp = Math.round(day.main.temp);
+          const iconCode = day.weather?.[0]?.icon || '01d';
+          const description = day.weather?.[0]?.description || '';
+          const dateObj = new Date(dt * 1000);
+          const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+          const monthDay = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          
+          const card = document.createElement('div');
+          card.className = 'forecast-card';
+          card.innerHTML = `
+            <div class="forecast-day">${dayName}</div>
+            <div style="font-size:0.7rem; color:#b0c6e0;">${monthDay}</div>
+            <div class="forecast-icon"><i class="fas ${getWeatherIcon(iconCode)}"></i></div>
+            <div class="forecast-temp">${temp}°C</div>
+            <div style="font-size:0.7rem; text-transform:capitalize; color:#ccdbe9;">${description}</div>
+          `;
+          forecastGrid.appendChild(card);
+        });
+      }
+
+
+
+
+      
+
+
+
+
     }
   ) ();
